@@ -30,8 +30,10 @@ var flagVerbose *bool = flag.Bool(flagVerboseName, flagVerboseValue, (fmt.Sprint
 
 var _, filename, _, _ = runtime.Caller(0)
 
+// defaultHandler is the HTTP handler for all root requests.
 func defaultHandler(w http.ResponseWriter, r *http.Request) {}
 
+// faviconHandler is the HTTP handler for all favicon requests.
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join(filepath.Dir(filename), "favicon", "favicon.ico"))
 }
