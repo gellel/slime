@@ -38,6 +38,9 @@ var _, filename, _, _ = runtime.Caller(0)
 // filefolder is the name of the folder for the file being executed.
 var filefolder string = filepath.Dir(filename)
 
+// cacheHandler is the HTTP handler for all cache requests.
+func cacheHandler(w http.ResponseWriter, r *http.Request) {}
+
 // defaultHandler is the HTTP handler for all root requests.
 func defaultHandler(w http.ResponseWriter, r *http.Request) {}
 
