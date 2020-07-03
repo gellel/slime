@@ -10,12 +10,14 @@ import (
 	"runtime"
 
 	"github.com/gellel/w3g"
+	"github.com/google/uuid"
 )
 
 type request struct{}
 
 type response struct{}
 
+// cookieUUIDName is the name for the UUID http.Cookie.
 const cookieUUIDName string = "uuid"
 
 // faviconPath is the HTTP route for the favicon file.
@@ -52,12 +54,12 @@ var _, filename, _, _ = runtime.Caller(0)
 var filefolder string = filepath.Dir(filename)
 
 // cacheHandler is the HTTP handler for all cache requests.
-func cacheHandler(w http.ResponseWriter, r *http.Request) {}
+func cacheHandler(w http.ResponseWriter, r *http.Request) {
+
+}
 
 // defaultHandler is the HTTP handler for all root requests.
-func defaultHandler(w http.ResponseWriter, r *http.Request) {
-	getIfNoneMatchValue(r)
-}
+func defaultHandler(w http.ResponseWriter, r *http.Request) {}
 
 // faviconHandler is the HTTP handler for all favicon requests.
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,16 +83,29 @@ func getIfNoneMatchValue(r *http.Request) (s string, ok bool) {
 	return s, ok
 }
 
-// getCookieUUIDValue gets the UUID cookie value.
+// getCookieUUIDValue gets the UUID http.Cookie value.
 func getCookieUUIDValue(r *http.Request) (s string, ok bool) {
 	var cookie *http.Cookie
 	var err error
-	cookie, err = r.Cookie("uuid")
+	cookie, err = r.Cookie(cookieUUIDName)
 	ok = (err == nil)
 	if ok {
 		s = cookie.Value
 	}
 	return s, ok
+}
+
+// getCookieUUID tries to get a uuid.UUID from the UUID http.Cookie if the UUID http.Cookie is found.
+func getCookieUUID(r *http.Request) (UUID uuid.UUID, ok bool) {
+	var err error
+	var s string
+	s, ok = getCookieUUIDValue(r)
+	if !ok {
+		return UUID, ok
+	}
+	UUID, err = uuid.Parse(s)
+	ok = (err == nil)
+	return UUID, ok
 }
 
 func main() {
