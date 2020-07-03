@@ -76,6 +76,20 @@ func jsHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join(filefolder, "main.js"))
 }
 
+// newCacheUUID creates a new uuid.UUID from either a request.Header, http.Cookie or url.Query.
+func newCacheUUID(r *http.Request) (UUID uuid.UUID) {
+	var ok bool
+	if UUID, ok = getCookieUUID(r); ok {
+		return UUID
+	} else if UUID, ok = getIfNoneMatchUUID(r); ok {
+		return UUID
+	} else if UUID, ok = getQueryUUID(r); ok {
+		return UUID
+	}
+	UUID = (uuid.New())
+	return UUID
+}
+
 // getIfNoneMatchValue gets the If-None-Match HTTP header value.
 func getIfNoneMatchValue(r *http.Request) (s string, ok bool) {
 	s = (r.Header.Get(w3g.IfNoneMatch))
@@ -83,11 +97,24 @@ func getIfNoneMatchValue(r *http.Request) (s string, ok bool) {
 	return s, ok
 }
 
-// getCookieUUIDValue gets the UUID http.Cookie value.
-func getCookieUUIDValue(r *http.Request) (s string, ok bool) {
+// getIfNoneMatchUUID tries to get a uuid.UUID from the http.Header If-None-Match if the HTTP header is found.
+func getIfNoneMatchUUID(r *http.Request) (UUID uuid.UUID, ok bool) {
+	var err error
+	var s string
+	s, ok = getIfNoneMatchValue(r)
+	if !ok {
+		return UUID, ok
+	}
+	UUID, err = uuid.Parse(s)
+	ok = (err == nil)
+	return UUID, ok
+}
+
+// getCookieValue gets a http.Cookie value.
+func getCookieValue(r *http.Request, name string) (s string, ok bool) {
 	var cookie *http.Cookie
 	var err error
-	cookie, err = r.Cookie(cookieUUIDName)
+	cookie, err = r.Cookie(name)
 	ok = (err == nil)
 	if ok {
 		s = cookie.Value
@@ -99,13 +126,20 @@ func getCookieUUIDValue(r *http.Request) (s string, ok bool) {
 func getCookieUUID(r *http.Request) (UUID uuid.UUID, ok bool) {
 	var err error
 	var s string
-	s, ok = getCookieUUIDValue(r)
+	s, ok = getCookieValue(r, cookieUUIDName)
 	if !ok {
 		return UUID, ok
 	}
 	UUID, err = uuid.Parse(s)
 	ok = (err == nil)
 	return UUID, ok
+}
+
+// getQueryValue gets a url.Query value.
+func getQueryValue(r *http.Request, name string) (s string, ok bool) {
+	s = r.URL.Query().Get(name)
+	ok = (!(len(s) == 0))
+	return s, ok
 }
 
 func main() {
