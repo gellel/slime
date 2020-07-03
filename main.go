@@ -8,11 +8,15 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/gellel/w3g"
 )
 
 type request struct{}
 
 type response struct{}
+
+const cookieUUIDName string = "uuid"
 
 // faviconPath is the HTTP route for the favicon file.
 const faviconPath string = fileNameFavicon
@@ -51,7 +55,9 @@ var filefolder string = filepath.Dir(filename)
 func cacheHandler(w http.ResponseWriter, r *http.Request) {}
 
 // defaultHandler is the HTTP handler for all root requests.
-func defaultHandler(w http.ResponseWriter, r *http.Request) {}
+func defaultHandler(w http.ResponseWriter, r *http.Request) {
+	getIfNoneMatchValue(r)
+}
 
 // faviconHandler is the HTTP handler for all favicon requests.
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,6 +72,25 @@ func iframeHandler(w http.ResponseWriter, r *http.Request) {
 // jsHandler is the HTTP handler for all JS requests.
 func jsHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join(filefolder, "main.js"))
+}
+
+// getIfNoneMatchValue gets the If-None-Match HTTP header value.
+func getIfNoneMatchValue(r *http.Request) (s string, ok bool) {
+	s = (r.Header.Get(w3g.IfNoneMatch))
+	ok = (!(len(s) == 0))
+	return s, ok
+}
+
+// getCookieUUIDValue gets the UUID cookie value.
+func getCookieUUIDValue(r *http.Request) (s string, ok bool) {
+	var cookie *http.Cookie
+	var err error
+	cookie, err = r.Cookie("uuid")
+	ok = (err == nil)
+	if ok {
+		s = cookie.Value
+	}
+	return s, ok
 }
 
 func main() {
