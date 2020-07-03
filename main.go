@@ -14,6 +14,15 @@ type request struct{}
 
 type response struct{}
 
+// faviconPath is the HTTP route for the favicon file.
+const faviconPath string = fileNameFavicon
+
+// fileNameFavicon is the name for the favicon ico file.
+const fileNameFavicon string = "favicon.ico"
+
+// fileNameIFrame is the name for the iframe HTML file.
+const fileNameIFrame string = "iframe.html"
+
 // flagPortName is the flag name for the port flag.
 const flagPortName string = "port"
 
@@ -46,12 +55,12 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {}
 
 // faviconHandler is the HTTP handler for all favicon requests.
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, filepath.Join(filefolder, "favicon", "favicon.ico"))
+	http.ServeFile(w, r, filepath.Join(filefolder, "favicon", fileNameFavicon))
 }
 
 // iframeHandler is the HTTP handle for all iframe requests.
 func iframeHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, filepath.Join(filefolder, "iframe.html"))
+	http.ServeFile(w, r, filepath.Join(filefolder, fileNameIFrame))
 }
 
 // jsHandler is the HTTP handler for all JS requests.
@@ -65,7 +74,7 @@ func main() {
 		log.Println(os.Args)
 	}
 	http.HandleFunc("/", defaultHandler)
-	http.HandleFunc((fmt.Sprintf("/%s", "favicon.ico")), faviconHandler)
+	http.HandleFunc((fmt.Sprintf("/%s", faviconPath)), faviconHandler)
 	http.HandleFunc((fmt.Sprintf("/%s", "i")), iframeHandler)
 	http.HandleFunc((fmt.Sprintf("/%s", "j")), jsHandler)
 	log.Println(http.ListenAndServe(fmt.Sprintf(":%d", *flagPort), nil))
