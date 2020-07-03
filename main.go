@@ -20,14 +20,34 @@ type response struct{}
 // cookieUUIDName is the name for the UUID http.Cookie.
 const cookieUUIDName string = "uuid"
 
+// favicon is the common namespace for the favicon.
+const favicon string = "favicon"
+
 // faviconPath is the HTTP route for the favicon file.
 const faviconPath string = fileNameFavicon
 
+// fileImageGIF is the representation expression of a 1x1 transparent gif.
+const fileImageGIF string = "" +
+	"\x47\x49\x46\x38" +
+	"\x39\x61\x01\x00" +
+	"\x01\x00\x80\x00" +
+	"\x00\x00\x00\x00" +
+	"\x00\x00\x00\x21" +
+	"\xF9\x04\x01\x00" +
+	"\x00\x00\x00\x2C" +
+	"\x00\x00\x00\x00" +
+	"\x01\x00\x01\x00" +
+	"\x00\x02\x02\x44" +
+	"\x01\x00\x3B"
+
 // fileNameFavicon is the name for the favicon ico file.
-const fileNameFavicon string = "favicon.ico"
+const fileNameFavicon string = (favicon + ".ico")
 
 // fileNameIFrame is the name for the iframe HTML file.
 const fileNameIFrame string = "iframe.html"
+
+// fileNameJavaScript is the name for the JavaScript file.
+const fileNameJavaScript string = "main.js"
 
 // flagPortName is the flag name for the port flag.
 const flagPortName string = "port"
@@ -35,14 +55,21 @@ const flagPortName string = "port"
 // flagPortValue is the default value for the port flag.
 const flagPortValue int = 5000
 
-// flagPort is the port flag argument for the application. flagPort controls the network port the application uses.
-var flagPort *int = flag.Int(flagPortName, flagPortValue, (fmt.Sprintf("-%s %d", flagPortName, flagPortValue)))
-
 // flagVerboseName is the flag name for the verbose flag.
 const flagVerboseName string = "verbose"
 
 // flagVerboseValue is the flag value for the verbose flag.
 const flagVerboseValue bool = true
+
+// imageHeaders is a map of HTTP headers for image HTTP requests.
+var imageHeaders = http.Header{
+	w3g.CacheControl:       {"max-age=0", "must-revalidate", "public"},
+	w3g.ContentDisposition: {"inline"},
+	w3g.ContentType:        {"image/gif"},
+	w3g.TimingAllowOrigin:  {"*"}}
+
+// flagPort is the port flag argument for the application. flagPort controls the network port the application uses.
+var flagPort *int = flag.Int(flagPortName, flagPortValue, (fmt.Sprintf("-%s %d", flagPortName, flagPortValue)))
 
 // flagVerbose is the flag name for the verbose flag. flagVerbose controls the level of output the application generates.
 var flagVerbose *bool = flag.Bool(flagVerboseName, flagVerboseValue, (fmt.Sprintf("-%s %t", flagVerboseName, flagVerboseValue)))
@@ -52,13 +79,6 @@ var _, filename, _, _ = runtime.Caller(0)
 
 // filefolder is the name of the folder for the file being executed.
 var filefolder string = filepath.Dir(filename)
-
-func setCacheHeaders() {}
-
-func setClearCacheHeaders(w http.ResponseWriter) http.ResponseWriter {
-	w.Header().Add(w3g.CacheControl, w3g.CacheControlHeader{NoCache: true}.String())
-	return w
-}
 
 // cacheHandler is the HTTP handler for all cache requests.
 func cacheHandler(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +91,7 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {}
 
 // faviconHandler is the HTTP handler for all favicon requests.
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, filepath.Join(filefolder, "favicon", fileNameFavicon))
+	http.ServeFile(w, r, filepath.Join(filefolder, favicon, fileNameFavicon))
 }
 
 // iframeHandler is the HTTP handler for all iframe requests.
@@ -81,15 +101,20 @@ func iframeHandler(w http.ResponseWriter, r *http.Request) {
 
 // imageHandler is the HTTP handler for all image requests.
 func imageHandler(w http.ResponseWriter, r *http.Request) {
-
+	var UUID uuid.UUID = newCacheUUID(r)
+	for k, substrings := range imageHeaders {
+		for _, v := range substrings {
+			w.Header().Add(k, v)
+		}
+	}
+	w.Header().Set(w3g.ETag, UUID.String())
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(fileImageGIF))
 }
 
 // jsHandler is the HTTP handler for all JS requests.
 func jsHandler(w http.ResponseWriter, r *http.Request) {
-	if *flagVerbose {
-
-	}
-	http.ServeFile(w, r, filepath.Join(filefolder, "main.js"))
+	http.ServeFile(w, r, filepath.Join(filefolder, fileNameJavaScript))
 }
 
 // newCacheUUID creates a new uuid.UUID from either a request.Header, http.Cookie or url.Query.
@@ -177,7 +202,8 @@ func main() {
 	}
 	http.HandleFunc("/", defaultHandler)
 	http.HandleFunc((fmt.Sprintf("/%s", faviconPath)), faviconHandler)
-	http.HandleFunc((fmt.Sprintf("/%s", "i")), iframeHandler)
+	http.HandleFunc((fmt.Sprintf("/%s", "i")), imageHandler)
+	http.HandleFunc((fmt.Sprintf("/%s", "f")), iframeHandler)
 	http.HandleFunc((fmt.Sprintf("/%s", "j")), jsHandler)
 	log.Println(http.ListenAndServe(fmt.Sprintf(":%d", *flagPort), nil))
 }

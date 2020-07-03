@@ -8,7 +8,13 @@
             document.addEventListener('DOMContentLoaded', function() {
                 window.addEventListener("message", function(e) {
                     if (e.origin) {
-                        window.parent.postMessage("hello", e.origin);
+                        (function(XHR) {
+                            XHR.open("GET", window.location.origin + "/" + "i");
+                            XHR.addEventListener("load", function(r) {
+                                window.parent.postMessage(XHR.getResponseHeader("etag"), e.origin);
+                            });
+                            XHR.send();
+                        }(new XMLHttpRequest()));
                     }
                 });
             });
