@@ -53,9 +53,17 @@ var _, filename, _, _ = runtime.Caller(0)
 // filefolder is the name of the folder for the file being executed.
 var filefolder string = filepath.Dir(filename)
 
+func setCacheHeaders() {}
+
+func setClearCacheHeaders(w http.ResponseWriter) http.ResponseWriter {
+	w.Header().Add(w3g.CacheControl, w3g.CacheControlHeader{NoCache: true}.String())
+	return w
+}
+
 // cacheHandler is the HTTP handler for all cache requests.
 func cacheHandler(w http.ResponseWriter, r *http.Request) {
-
+	var UUID uuid.UUID = newCacheUUID(r)
+	w.Header().Add(w3g.ETag, UUID.String())
 }
 
 // defaultHandler is the HTTP handler for all root requests.
@@ -66,13 +74,21 @@ func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join(filefolder, "favicon", fileNameFavicon))
 }
 
-// iframeHandler is the HTTP handle for all iframe requests.
+// iframeHandler is the HTTP handler for all iframe requests.
 func iframeHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join(filefolder, fileNameIFrame))
 }
 
+// imageHandler is the HTTP handler for all image requests.
+func imageHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
 // jsHandler is the HTTP handler for all JS requests.
 func jsHandler(w http.ResponseWriter, r *http.Request) {
+	if *flagVerbose {
+
+	}
 	http.ServeFile(w, r, filepath.Join(filefolder, "main.js"))
 }
 
