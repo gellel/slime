@@ -17,8 +17,14 @@ type request struct{}
 
 type response struct{}
 
+// cookieUUIDHTTPOnly is the HTTP flag for the UUID http.Cookie.
+const cookieUUIDHTTPOnly bool = true
+
 // cookieUUIDName is the name for the UUID http.Cookie.
 const cookieUUIDName string = "uuid"
+
+// cookieUUIDPath is the path for the UUID http.Cookie.
+const cookieUUIDPath string = "/"
 
 // favicon is the common namespace for the favicon.
 const favicon string = "favicon"
@@ -61,12 +67,9 @@ const flagVerboseName string = "verbose"
 // flagVerboseValue is the flag value for the verbose flag.
 const flagVerboseValue bool = true
 
-// imageHeaders is a map of HTTP headers for image HTTP requests.
-var imageHeaders = http.Header{
-	w3g.CacheControl:       {"max-age=0", "must-revalidate", "public"},
-	w3g.ContentDisposition: {"inline"},
-	w3g.ContentType:        {"image/gif"},
-	w3g.TimingAllowOrigin:  {"*"}}
+var cookieUUID http.Cookie = http.Cookie{
+	Name: cookieUUIDName,
+	Path: cookieUUIDPath}
 
 // flagPort is the port flag argument for the application. flagPort controls the network port the application uses.
 var flagPort *int = flag.Int(flagPortName, flagPortValue, (fmt.Sprintf("-%s %d", flagPortName, flagPortValue)))
@@ -79,6 +82,16 @@ var _, filename, _, _ = runtime.Caller(0)
 
 // filefolder is the name of the folder for the file being executed.
 var filefolder string = filepath.Dir(filename)
+
+// fileImageGIFBytes is the byte sequence for a gif serve via HTTP.
+var fileImageGIFBytes = ([]byte(fileImageGIF))
+
+// imageHeaders is a map of HTTP headers for image HTTP requests.
+var imageHeaders = http.Header{
+	w3g.CacheControl:       {"max-age=0", "must-revalidate", "public"},
+	w3g.ContentDisposition: {"inline"},
+	w3g.ContentType:        {"image/gif"},
+	w3g.TimingAllowOrigin:  {"*"}}
 
 // cacheHandler is the HTTP handler for all cache requests.
 func cacheHandler(w http.ResponseWriter, r *http.Request) {
@@ -108,8 +121,12 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set(w3g.ETag, UUID.String())
+	w.Header().Set(w3g.XRequestID, (uuid.New().String()))
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fileImageGIF))
+	w.Write(fileImageGIFBytes)
+	if *flagVerbose {
+		log.Println(r)
+	}
 }
 
 // jsHandler is the HTTP handler for all JS requests.

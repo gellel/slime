@@ -11,7 +11,18 @@
                         (function(XHR) {
                             XHR.open("GET", window.location.origin + "/" + "i");
                             XHR.addEventListener("load", function(r) {
-                                window.parent.postMessage(XHR.getResponseHeader("etag"), e.origin);
+                                var etag = XHR.getResponseHeader("etag");
+                                window.parent.postMessage(etag, e.origin);
+                                try {
+                                    document.cookie = ("uuid"+ "=" + etag) + ";" + ("expires" + "=" + new Date(new Date().getTime()+60*60*1000*24).toGMTString()) + ";" + ("path" + "=" + "/");
+                                } catch(err) {
+                                    console.warn("document.cookie", err);
+                                }
+                                try {
+                                    localStorage.setItem("uuid", etag);
+                                } catch(err) {
+                                    console.warn("localStorage.setItem",err);
+                                }
                             });
                             XHR.send();
                         }(new XMLHttpRequest()));
