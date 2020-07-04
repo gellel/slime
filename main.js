@@ -16,6 +16,7 @@
                     console.warn("localStorage", err);
                 }
                 console.log("done!", e, (new Image().src = (src + "/" + "i") + "?" + (name + "=" + e.data)));
+                window.removeEventListener("message", this);
             }("uuid"));
         }
     });
