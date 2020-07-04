@@ -3,25 +3,25 @@
     var i = document.createElement("iframe");
     window.addEventListener("message", function(e) {
         if (e.origin === src) {
-            console.log("!", e);
             i.parentElement.removeChild(i);
-            try {
-                document.cookie = ("uuid"+ "=" + e.data) + ";" + ("expires" + "=" + new Date(new Date().getTime()+60*60*1000*24).toGMTString()) + ";" + ("path" + "=" + "/");
-            } catch(err) {
-                console.warn("document.cookie", err);
-            }
-            try {
-                localStorage.setItem("uuid", e.data);
-            } catch(err) {
-                console.warn("localStorage", err);
-            }
-            console.log("done!");
+            (function(name) {
+                try {
+                    document.cookie = (name + "=" + e.data) + ";" + ("expires" + "=" + new Date(new Date().getTime() + 60 * 60 * 1000 * 24).toGMTString()) + ";" + ("path" + "=" + "/");
+                } catch(err) {
+                    console.warn("document.cookie", err);
+                }
+                try {
+                    localStorage.setItem(name, e.data);
+                } catch(err) {
+                    console.warn("localStorage", err);
+                }
+                console.log("done!", e, (new Image().src = (src + "/" + "i") + "?" + (name + "=" + e.data)));
+            }("uuid"));
         }
     });
-    i.frameBorder = 0;
-    i.height = i.width = 1;
+    i.frameBorder = (i.height = i.width = 0);
     i.id = "slime";
-    i.src = src + "/" + "f";
+    i.src = (src + "/" + "f");
     i.addEventListener("load", function() {
         try {
             i.contentWindow.postMessage(i.id, i.src);
